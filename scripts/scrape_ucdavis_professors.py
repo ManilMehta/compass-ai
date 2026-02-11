@@ -8,9 +8,13 @@ Output: ucdavis_professors.csv with name, department, ratings, profile_url, cour
 import base64
 import csv
 import json
+import os
 import time
 
 import requests
+
+# Set to True to save the first teacher's ratings API response to _rmp_debug_response.json
+DEBUG_FIRST_RATINGS = os.environ.get("RMP_DEBUG") == "1"
 
 # RateMyProfessor: UC Davis legacy ID from URL /school/1073
 # GraphQL expects base64("School-1073") for schoolID in teacher search
@@ -70,7 +74,8 @@ def build_search_query(first: int, after: str) -> str:
     )
 
 
-# Teacher profile query: get ratings (each has a course) by teacher global id
+# Teacher profile query: get ratings (each has a course) by teacher global id.
+# Rating type has "class" (course code) and "courseType" (e.g. For Credit).
 TEACHER_RATINGS_QUERY = """
 query TeacherRatingsListQuery($id: ID!, $count: Int!) {
   node(id: $id) {
@@ -78,9 +83,8 @@ query TeacherRatingsListQuery($id: ID!, $count: Int!) {
       ratings(first: $count) {
         edges {
           node {
-            courseCode
             class
-            course
+            courseType
           }
         }
       }
@@ -90,17 +94,27 @@ query TeacherRatingsListQuery($id: ID!, $count: Int!) {
 """
 
 
-def fetch_teacher_courses(legacy_id) -> list[str]:
-    """Fetch unique course codes/names for a teacher from their ratings. Returns empty list on error."""
-    if legacy_id is None:
+def _teacher_global_id(legacy_id) -> str:
+    """RMP global ID: base64('Teacher-<legacyId>')."""
+    return base64.b64encode(f"Teacher-{legacy_id}".encode()).decode()
+
+
+def fetch_teacher_courses(teacher_global_id=None, legacy_id=None, debug=False) -> list[str]:
+    """Fetch unique course codes/names for a teacher from their ratings. Use teacher_global_id from search result, or build from legacy_id."""
+    id_val = teacher_global_id
+    if not id_val and legacy_id is not None:
+        id_val = _teacher_global_id(legacy_id)
+    if not id_val:
         return []
-    teacher_global_id = base64.b64encode(f"Teacher-{legacy_id}".encode()).decode()
-    variables = {"id": teacher_global_id, "count": 100}
+    variables = {"id": id_val, "count": 100}
     payload = {"query": TEACHER_RATINGS_QUERY, "variables": variables}
     try:
         r = requests.post(GRAPHQL_URL, json=payload, headers=HEADERS, timeout=15)
         r.raise_for_status()
         data = r.json()
+        if debug:
+            with open("_rmp_debug_response.json", "w", encoding="utf-8") as f:
+                json.dump(data, f, indent=2)
         if data.get("errors"):
             return []
         node = (data.get("data") or {}).get("node")
@@ -111,10 +125,10 @@ def fetch_teacher_courses(legacy_id) -> list[str]:
         courses = set()
         for edge in edges:
             n = edge.get("node") or {}
-            for key in ("courseCode", "class", "course"):
-                val = n.get(key)
-                if val and str(val).strip():
-                    courses.add(str(val).strip())
+            # RMP Rating type uses "class" for course code (e.g. "118A", "CHE128C")
+            val = n.get("class")
+            if val and str(val).strip():
+                courses.add(str(val).strip())
         return sorted(courses)
     except Exception:
         return []
@@ -235,8 +249,12 @@ def main():
             if would_take is not None and would_take < 0:
                 would_take = None
 
-            # Fetch courses from teacher's ratings (one extra request per professor)
-            courses_list = fetch_teacher_courses(legacy_id) if legacy_id else []
+            # Fetch courses from teacher's ratings (use id from search so format is correct)
+            courses_list = fetch_teacher_courses(
+                teacher_global_id=node.get("id"),
+                legacy_id=legacy_id,
+                debug=DEBUG_FIRST_RATINGS and (i == 0),
+            )
             courses_str = "; ".join(courses_list) if courses_list else ""
 
             writer.writerow([
