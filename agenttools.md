@@ -26,6 +26,14 @@ Search for professors by name, partial name, or fuzzy match. Use this when the s
 }
 ```
 
+**Pydantic Schema:**
+```python
+from pydantic import BaseModel, Field
+
+class SearchProfessorsInput(BaseModel):
+    name: str = Field(..., description="Full or partial professor name (e.g. 'Sarah Chen', 'Johnson')")
+```
+
 **Output:**
 A list of matching professors with their `id`, `name`, `department`, `overall_rating`, `difficulty_rating`, `would_take_again_percentage`, and `profile_url`.
 
@@ -56,6 +64,14 @@ Fetch full details for a specific professor by their UUID, including aggregated 
 {
   "professor_id": "string — UUID of the professor"
 }
+```
+
+**Pydantic Schema:**
+```python
+from pydantic import BaseModel, Field
+
+class GetProfessorDetailsInput(BaseModel):
+    professor_id: str = Field(..., description="UUID of the professor")
 ```
 
 **Output:**
@@ -94,6 +110,17 @@ Fetch recent or filtered reviews for a specific professor. Use this when the stu
 }
 ```
 
+**Pydantic Schema:**
+```python
+from pydantic import BaseModel, Field
+from typing import Optional
+
+class GetProfessorReviewsInput(BaseModel):
+    professor_id: str = Field(..., description="UUID of the professor")
+    limit: Optional[int] = Field(10, description="Number of reviews to return (default 10)")
+    course: Optional[str] = Field(None, description="Optional filter to reviews for a specific course")
+```
+
 **Output:**
 A list of reviews with `rating`, `difficulty`, `comment`, `course`, `tags`, and `review_date`.
 
@@ -124,6 +151,14 @@ Find all professors who have taught a specific course, identified by course code
 {
   "course_code": "string — course identifier (e.g. 'ECS 36C', 'MAT 21A')"
 }
+```
+
+**Pydantic Schema:**
+```python
+from pydantic import BaseModel, Field
+
+class FindProfessorsByCourseInput(BaseModel):
+    course_code: str = Field(..., description="Course identifier (e.g. 'ECS 36C', 'MAT 21A')")
 ```
 
 **Output:**
@@ -161,6 +196,17 @@ Retrieve the highest-rated professors in a given department, optionally filtered
   "limit": "integer — number of professors to return (default 5)",
   "min_reviews": "integer — minimum review count to qualify (default 3)"
 }
+```
+
+**Pydantic Schema:**
+```python
+from pydantic import BaseModel, Field
+from typing import Optional
+
+class GetTopProfessorsByDepartmentInput(BaseModel):
+    department_name: str = Field(..., description="Full or partial department name (e.g. 'Computer Science', 'Biology', 'Mathematics')")
+    limit: Optional[int] = Field(5, description="Number of professors to return (default 5)")
+    min_reviews: Optional[int] = Field(3, description="Minimum review count to qualify (default 3)")
 ```
 
 **Output:**
@@ -201,6 +247,17 @@ Find professors known for lighter workloads and higher grades. Ranks by a combin
 }
 ```
 
+**Pydantic Schema:**
+```python
+from pydantic import BaseModel, Field
+from typing import Optional
+
+class FindEasyProfessorsInput(BaseModel):
+    department_name: Optional[str] = Field(None, description="Optional filter by department")
+    course_code: Optional[str] = Field(None, description="Optional filter by course")
+    limit: Optional[int] = Field(5, description="Number of results (default 5)")
+```
+
 **Output:**
 Ranked list of professors sorted by lowest difficulty and highest would-take-again percentage, with supporting review tags (e.g. "Easy A", "Light workload").
 
@@ -234,6 +291,16 @@ Search reviews semantically for professors matching a described teaching style o
   "keywords": "string — teaching traits to search for (e.g. 'real-world examples', 'clear explanations', 'engaging', 'tough but fair')",
   "department_name": "string — optional department filter"
 }
+```
+
+**Pydantic Schema:**
+```python
+from pydantic import BaseModel, Field
+from typing import Optional
+
+class FindProfessorsByTeachingStyleInput(BaseModel):
+    keywords: str = Field(..., description="Teaching traits to search for (e.g. 'real-world examples', 'clear explanations', 'engaging', 'tough but fair')")
+    department_name: Optional[str] = Field(None, description="Optional department filter")
 ```
 
 **Output:**
@@ -275,6 +342,15 @@ Generate a side-by-side comparison of two or more professors. Pulls full stats a
 }
 ```
 
+**Pydantic Schema:**
+```python
+from pydantic import BaseModel, Field
+from typing import List
+
+class CompareProfessorsInput(BaseModel):
+    professor_ids: List[str] = Field(..., description="List of 2–4 professor UUIDs to compare", min_items=2, max_items=4)
+```
+
 **Output:**
 A structured comparison table with `name`, `department`, `overall_rating`, `difficulty_rating`, `would_take_again_percentage`, `review_count`, top tags, and a sample positive and negative comment for each professor.
 
@@ -291,6 +367,11 @@ A structured comparison table with `name`, `department`, `overall_rating`, `diff
 Return all available departments. Use this to resolve ambiguous department names or when the student asks a broad question without specifying a department.
 
 **Input:** None
+
+**Pydantic Schema:**
+```python
+# No input schema needed - this tool takes no parameters
+```
 
 **Output:**
 Full list of department names and codes.
@@ -326,4 +407,4 @@ SELECT name, code FROM departments ORDER BY name;
 - The agent should use **ReAct** or **OpenAI Functions** agent type for best tool-chaining behavior.
 - `find_professors_by_teaching_style` is the most expensive query — consider adding a `LIMIT` on the subquery and caching frequent keyword searches.
 - For semantic search improvements, consider embedding review comments with `pgvector` and replacing keyword matching in `find_professors_by_teaching_style` with a vector similarity search.
-- Always resolve professor names to UUIDs before calling detail/review tools — never pass raw name strings to tools that expect an ID.
+- Always resolve professor names to UUIDs before calling detail/review tools — never pass raw name strings to tools that expect an ID.2
