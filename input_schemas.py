@@ -54,6 +54,6 @@ class FindProfessorsByTeachingStyleInput(BaseModel):
 
 
 class CompareProfessorsInput(BaseModel):
-   professor_ids: List[str] = Field(..., description="List of 2–4 professor UUIDs to compare", min_items=2, max_items=4)
+   professor_ids: List[str] = Field(..., description="List of 2–4 professor UUIDs to compare", min_length=2, max_length=4)
 
 
