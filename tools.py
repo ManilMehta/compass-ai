@@ -10,8 +10,10 @@ from input_schemas import (
    FindProfessorsByTeachingStyleInput,
    CompareProfessorsInput,
 )
+import logging
 
-
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 @tool(
@@ -20,6 +22,7 @@ from input_schemas import (
    args_schema=SearchProfessorsInput
 )
 def search_professors(name: str) -> str:
+   logger.info(f"[TOOL CALL] - search_professors(name={name})")
    return "success"
 
 
@@ -31,6 +34,7 @@ def search_professors(name: str) -> str:
    args_schema=GetProfessorDetailsInput
 )
 def get_professor_details(professor_id: str) -> str:
+   logger.info(f"[TOOL CALL] - get_professor_details(professor_id={professor_id})")
    return "success"
 
 
@@ -42,6 +46,7 @@ def get_professor_details(professor_id: str) -> str:
    args_schema=GetProfessorReviewsInput
 )
 def get_professor_reviews(professor_id: str, limit: int = 10, course: str = None) -> str:
+   logger.info(f"[TOOL CALL] - get_professor_reviews(professor_id={professor_id}, limit={limit}, course={course})")
    return "success"
 
 
@@ -53,6 +58,7 @@ def get_professor_reviews(professor_id: str, limit: int = 10, course: str = None
    args_schema=FindProfessorsByCourseInput
 )
 def find_professors_by_course(course_code: str) -> str:
+   logger.info(f"[TOOL CALL] - find_professors_by_course(course_code={course_code})")
    return "success"
 
 
@@ -64,6 +70,7 @@ def find_professors_by_course(course_code: str) -> str:
    args_schema=GetTopProfessorsByDepartmentInput
 )
 def get_top_professors_by_department(department_name: str, limit: int = 5, min_reviews: int = 3) -> str:
+   logger.info(f"[TOOL CALL] - get_top_professors_by_department(department_name={department_name}, limit={limit}, min_reviews={min_reviews})")
    return "success"
 
 
@@ -75,6 +82,7 @@ def get_top_professors_by_department(department_name: str, limit: int = 5, min_r
    args_schema=FindEasyProfessorsInput
 )
 def find_easy_professors(department_name: str = None, course_code: str = None, limit: int = 5) -> str:
+   logger.info(f"[TOOL CALL] - find_easy_professors(department_name={department_name}, course_code={course_code}, limit={limit})")
    return "success"
 
 
@@ -86,6 +94,7 @@ def find_easy_professors(department_name: str = None, course_code: str = None, l
    args_schema=FindProfessorsByTeachingStyleInput
 )
 def find_professors_by_teaching_style(keywords: str, department_name: str = None) -> str:
+   logger.info(f"[TOOL CALL] - find_professors_by_teaching_style(keywords={keywords}, department_name={department_name})")
    return "success"
 
 
@@ -97,6 +106,7 @@ def find_professors_by_teaching_style(keywords: str, department_name: str = None
    args_schema=CompareProfessorsInput
 )
 def compare_professors(professor_ids: List[str]) -> str:
+   logger.info(f"[TOOL CALL] - compare_professors(professor_ids={professor_ids})")
    return "success"
 
 
@@ -107,4 +117,5 @@ def compare_professors(professor_ids: List[str]) -> str:
    description="Return all available departments. Use this to resolve ambiguous department names or when the student asks a broad question without specifying a department."
 )
 def list_departments() -> str:
+   logger.info(f"[TOOL CALL] - list_departments()")
    return "success"
