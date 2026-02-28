@@ -214,6 +214,7 @@ def main():
             "overall_rating",
             "difficulty_rating",
             "would_take_again_percentage",
+            "num_ratings",
             "profile_url",
             "courses",
         ])
@@ -228,12 +229,15 @@ def main():
             avg_rating = node.get("avgRating")
             avg_diff = node.get("avgDifficulty")
             would_take = node.get("wouldTakeAgainPercent")
+            num_ratings = node.get("numRatings")
             if avg_rating is not None and avg_rating < 0:
                 avg_rating = None
             if avg_diff is not None and avg_diff < 0:
                 avg_diff = None
             if would_take is not None and would_take < 0:
                 would_take = None
+            if num_ratings is not None and num_ratings < 0:
+                num_ratings = None
 
             # Fetch courses from teacher's ratings (one extra request per professor)
             courses_list = fetch_teacher_courses(legacy_id) if legacy_id else []
@@ -245,6 +249,7 @@ def main():
                 str(round(avg_rating, 1)) if avg_rating is not None else "",
                 str(round(avg_diff, 1)) if avg_diff is not None else "",
                 str(int(would_take)) if would_take is not None else "",
+                str(int(num_ratings)) if num_ratings is not None else "",
                 profile_url,
                 courses_str,
             ])
