@@ -13,11 +13,12 @@ This repo also includes a simple CLI agent (LangChain + OpenAI) that queries the
 1. Install dependencies:
 
 ```bash
-python -m venv .venv && source .venv/bin/activate
+cd backend
+python -m venv .venv && source .venv/bin/activate  # or .venv\Scripts\activate on Windows
 pip install -r requirements.txt
 ```
 
-2. Create a `.env` file in the repo root with:
+2. Create a `.env` file in `backend/` with:
 
 - `SUPABASE_URL`
 - `SUPABASE_SECRET_KEY` (or `SUPABASE_SERVICE_KEY` / `SUPABASE_KEY`)
@@ -29,14 +30,48 @@ pip install -r requirements.txt
 Interactive mode:
 
 ```bash
+cd backend
 python -m compass_cli.cli
 ```
 
 Single question:
 
 ```bash
+cd backend
 python -m compass_cli.cli --once "Who's the best professor for ECS 36C?"
 ```
+
+## Web App (FastAPI + Next.js)
+
+The backend exposes a FastAPI chat API, and the frontend provides a chat interface.
+
+### Backend (FastAPI)
+
+1. From `backend/`, install dependencies and ensure `.env` is configured (same as CLI).
+2. Run the server:
+
+```bash
+cd backend
+uvicorn main:app --reload --port 8000
+```
+
+### Frontend (Next.js)
+
+1. From `frontend/`, install dependencies and optionally copy `.env.local.example` to `.env.local`:
+
+```bash
+cd frontend
+pnpm install
+cp .env.local.example .env.local  # optional; defaults to http://localhost:8000
+```
+
+2. Run the dev server:
+
+```bash
+pnpm dev
+```
+
+3. Open http://localhost:3000 to use the chat interface.
 
 ### Example Requests
 
