@@ -4,6 +4,40 @@
 
 **Compass AI** is a conversational web agent that helps UC Davis students make informed decisions about professor selection during course planning. Students can chat to discover, compare, and get personalized recommendations for professors based on Rate My Professor data.
 
+## CLI (local)
+
+This repo also includes a simple CLI agent (LangChain + OpenAI) that queries the Supabase database and uses fuzzy matching for professor / department / course names.
+
+### Setup
+
+1. Install dependencies:
+
+```bash
+python -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+```
+
+2. Create a `.env` file in the repo root with:
+
+- `SUPABASE_URL`
+- `SUPABASE_SECRET_KEY` (or `SUPABASE_SERVICE_KEY` / `SUPABASE_KEY`)
+- `OPENAI_API_KEY`
+- Optional: `OPENAI_MODEL` (defaults to `gpt-4.1-mini`)
+
+### Run
+
+Interactive mode:
+
+```bash
+python -m compass_cli.cli
+```
+
+Single question:
+
+```bash
+python -m compass_cli.cli --once "Who's the best professor for ECS 36C?"
+```
+
 ### Example Requests
 
 The following is a list of example requests that Compass can handle:
