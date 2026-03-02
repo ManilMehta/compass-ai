@@ -1,14 +1,19 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import { Send } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { chat, type ChatMessage } from "@/lib/api";
+
+const EXAMPLE_PROMPTS = [
+  "Who's the best professor for ECS 36C?",
+  "Tell me about Professor Sarah Chen",
+];
 
 export function ChatInterface() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -25,8 +30,8 @@ export function ChatInterface() {
     scrollToBottom();
   }, [messages, scrollToBottom]);
 
-  const handleSubmit = async () => {
-    const text = input.trim();
+  const handleSubmit = async (overrideText?: string) => {
+    const text = (overrideText ?? input).trim();
     if (!text || isLoading) return;
 
     const userMessage: ChatMessage = { role: "user", content: text };
@@ -56,19 +61,52 @@ export function ChatInterface() {
 
   return (
     <div className="flex h-full flex-col">
-      <header className="shrink-0 border-b px-6 py-4">
-        <h1 className="text-xl font-semibold">Compass AI</h1>
-        <p className="text-muted-foreground text-sm">
-          Ask about UC Davis professors and courses
-        </p>
+      <header className="shrink-0 border-b border-border/50 bg-background/80 px-6 py-4 backdrop-blur-sm">
+        <div className="flex items-center gap-3">
+          <Image
+            src="/compass.png"
+            alt=""
+            width={32}
+            height={32}
+            className="dark:invert"
+          />
+          <div>
+            <h1 className="text-xl font-semibold">Compass AI</h1>
+            <p className="text-muted-foreground text-sm">
+              Ask about UC Davis professors and courses
+            </p>
+          </div>
+        </div>
       </header>
 
       <ScrollArea className="flex-1 px-6 py-4">
         <div className="flex flex-col gap-4">
           {messages.length === 0 && (
-            <p className="text-muted-foreground py-8 text-center text-sm">
-              Start a conversation by asking about professors or courses.
-            </p>
+            <div className="flex flex-col items-center gap-6 py-12">
+              <Image
+                src="/compass.png"
+                alt=""
+                width={64}
+                height={64}
+                className="text-muted-foreground opacity-60 dark:invert dark:opacity-50"
+              />
+              <p className="text-muted-foreground text-center text-sm">
+                Start a conversation by asking about professors or courses.
+              </p>
+              <div className="flex flex-wrap justify-center gap-2">
+                {EXAMPLE_PROMPTS.map((prompt) => (
+                  <button
+                    key={prompt}
+                    type="button"
+                    onClick={() => handleSubmit(prompt)}
+                    disabled={isLoading}
+                    className="rounded-full border border-border/60 bg-muted/40 px-4 py-2 text-sm text-foreground/90 transition-colors hover:bg-muted/60 hover:border-border disabled:opacity-50"
+                  >
+                    {prompt}
+                  </button>
+                ))}
+              </div>
+            </div>
           )}
           {messages.map((msg, i) => (
             <div
@@ -79,21 +117,21 @@ export function ChatInterface() {
               )}
             >
               {msg.role === "user" ? (
-                <div className="bg-primary text-primary-foreground max-w-[85%] rounded-lg px-4 py-2">
+                <div className="bg-primary text-primary-foreground max-w-[85%] rounded-2xl px-4 py-2.5">
                   {msg.content}
                 </div>
               ) : (
-                <Card className="max-w-[85%] border px-4 py-3">
+                <div className="bg-muted/50 border-border/50 max-w-[85%] rounded-2xl border px-4 py-3">
                   <p className="whitespace-pre-wrap text-sm">{msg.content}</p>
-                </Card>
+                </div>
               )}
             </div>
           ))}
           {isLoading && (
             <div className="flex justify-start">
-              <Card className="border px-4 py-3">
+              <div className="bg-muted/50 border-border/50 max-w-[85%] rounded-2xl border px-4 py-3">
                 <p className="text-muted-foreground text-sm">Thinking...</p>
-              </Card>
+              </div>
             </div>
           )}
           <div ref={scrollRef} />
@@ -106,7 +144,7 @@ export function ChatInterface() {
         </div>
       )}
 
-      <div className="shrink-0 border-t p-4">
+      <div className="shrink-0 border-t border-border/50 bg-background/80 p-4 backdrop-blur-sm">
         <div className="flex gap-2">
           <Textarea
             placeholder="Ask about professors or courses..."
@@ -114,14 +152,14 @@ export function ChatInterface() {
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
             disabled={isLoading}
-            className="min-h-12 resize-none"
+            className="min-h-12 resize-none rounded-2xl shadow-none"
             rows={1}
           />
           <Button
-            onClick={handleSubmit}
+            onClick={() => handleSubmit()}
             disabled={isLoading || !input.trim()}
             size="icon"
-            className="h-12 shrink-0"
+            className="h-12 shrink-0 rounded-2xl"
           >
             <Send className="size-4" />
           </Button>
